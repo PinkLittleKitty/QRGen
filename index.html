@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuerre - Generador de QR</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+        input[type="text"], input[type="file"] {
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #qrcode {
+            margin-top: 30px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Cuerre - Generador de QR</h1>
+    <div class="input-container">
+        <input type="text" id="text" placeholder="Escribí el link">
+        <input type="file" id="image" accept="image/*">
+        <button onclick="generateQR()">Generar QR</button>
+    </div>
+    <div id="qrcode"></div>
+    <script>
+        function generateQR() {
+            const text = document.getElementById('text').value;
+            const imageInput = document.getElementById('image');
+            const qr = qrcode(0, 'H');
+            qr.addData(text);
+            qr.make();
+
+            const qrImage = new Image();
+            qrImage.src = qr.createDataURL(10);
+
+            qrImage.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = qrImage.width;
+                canvas.height = qrImage.height;
+
+                ctx.drawImage(qrImage, 0, 0);
+
+                if (imageInput.files && imageInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const centerImage = new Image();
+                        centerImage.src = e.target.result;
+                        centerImage.onload = function() {
+                              const size = Math.min(canvas.width, canvas.height) / 3;
+                              const x = (canvas.width - size) / 2;
+                              const y = (canvas.height - size) / 2;
+                              
+                              ctx.fillStyle = 'white';
+                              ctx.fillRect(x, y, size, size);
+
+                              ctx.imageSmoothingEnabled = true;
+                              ctx.imageSmoothingQuality = 'high';
+                          
+                              ctx.drawImage(centerImage, x, y, size, size);
+
+                              ctx.globalAlpha = 0.5;
+                              ctx.drawImage(centerImage, x, y, size, size);
+                              ctx.globalAlpha = 1.0;
+                              
+                              document.getElementById('qrcode').innerHTML = '';
+                              document.getElementById('qrcode').appendChild(canvas);
+                        }
+                    }
+                    reader.readAsDataURL(imageInput.files[0]);
+                } else {
+                    document.getElementById('qrcode').innerHTML = '';
+                    document.getElementById('qrcode').appendChild(canvas);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
